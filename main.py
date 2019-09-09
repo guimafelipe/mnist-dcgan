@@ -48,7 +48,7 @@ def make_generator_model():
     return model
 
 
-def make_discrimator_model():
+def make_discriminator_model():
     model = tf.keras.Sequential()
     model.add(tf.keras.layers.Conv2D(64, (5,5), strides=(2,2), padding='same'))
     model.add(tf.keras.layers.LeakyReLU())
@@ -64,13 +64,13 @@ def make_discrimator_model():
     return model
 
 generator = make_generator_model()
-discrimator = make_discrimator_model()
+discriminator = make_discriminator_model()
 
 def generator_loss(generated_output):
     return tf.losses.sigmoid_cross_entropy(tf.ones_like(generated_output), generated_output)
 
 def discriminator_loss(real_output, generated_output):
-    real_loss = tf.losses.sigmoid_cross_entropy(multi_class_labes=tf.ones_like(real_output), logits=real_output)
+    real_loss = tf.losses.sigmoid_cross_entropy(multi_class_labels=tf.ones_like(real_output), logits=real_output)
 
     generated_loss = tf.losses.sigmoid_cross_entropy(multi_class_labels=tf.zeros_like(generated_output), logits=generated_output)
 
@@ -83,7 +83,7 @@ discriminator_optimizer = tf.train.AdamOptimizer(1e-4)
 
 checkpoint_dir = './training_checkpoints'
 checkpoint_prefix = os.path.join(checkpoint_dir, "ckpt")
-checkpoint = tf.train.Checkpoint(generator_optimizer=generator_optimizer, discriminator_optimizer=discriminator_optimizer, generator=generator, discrimator=discrimator)
+checkpoint = tf.train.Checkpoint(generator_optimizer=generator_optimizer, discriminator_optimizer=discriminator_optimizer, generator=generator, discriminator=discriminator)
 
 EPOCHS = 50
 noise_dim = 100
@@ -97,7 +97,7 @@ def train_step(images):
     with tf.GradientTape() as gen_tape, tf.GradientTape() as disc_tape:
         generated_images = generator(noise, training=True)
         real_output = discriminator(images, training=True)
-        generated_output = discrimator(generated_images, training=True)
+        generated_output = discriminator(generated_images, training=True)
 
         gen_loss = generator_loss(generated_output)
         disc_loss = discriminator_loss(real_output, generated_output)
@@ -106,7 +106,7 @@ def train_step(images):
         gradients_of_discriminator = disc_tape.gradient(disc_loss, discriminator.variables)
 
         generator_optimizer.apply_gradients(zip(gradients_of_generator, generator.variables))
-        discriminator_optimizer.apply_gradients(zip(gradients_of_discriminator, discrimator.variables))
+        discriminator_optimizer.apply_gradients(zip(gradients_of_discriminator, discriminator.variables))
 
 
 train_step = tf.contrib.eager.defun(train_step)
